@@ -50,9 +50,3 @@ func createChapterUrlsFromChapterIds(chapterIds []string) []string {
     return chapterUrls
 }
 
-func downloadChapterList(chapterListUrl string) {
-    chapterIds, _ := extractChapterIds(chapterListUrl)
-    chapterUrls := createChapterUrlsFromChapterIds(chapterIds)
-    fmt.Println(chapterUrls[0])
-    fmt.Println(len(chapterUrls))
-}

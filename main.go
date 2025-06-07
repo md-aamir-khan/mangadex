@@ -44,8 +44,7 @@ func main() {
 
 func initDirCmd() *cobra.Command {
     var id string
-    var parentDir string
-    var mangaName string
+    var mangaDir string
     initDirCmd := &cobra.Command{
         Use:   "initdir",
         Short: "Inits manga directory with cache",
@@ -54,10 +53,6 @@ func initDirCmd() *cobra.Command {
             if err != nil {
                 panic(err)
             }
-            if !isDirectory(parentDir) {
-                panic("directory is not valid")
-            }
-            mangaDir := path.Join(parentDir, mangaName)
             if err := os.Mkdir(mangaDir, 0755); err != nil {
                 panic(err)
             }
@@ -66,9 +61,7 @@ func initDirCmd() *cobra.Command {
             }
 
             mangaCache := MangaCache{
-                MangaDir:                 mangaDir,
                 Id:                       id,
-                Name:                     mangaName,
                 Offset:                   0,
                 NextIdToCreatePDF:        1,
                 DownloadedWebsiteIndices: []int{},
@@ -88,28 +81,25 @@ func initDirCmd() *cobra.Command {
         },
     }
     initDirCmd.Flags().StringVarP(&id, "id", "", "", "id of the manga in mangadex")
-    initDirCmd.Flags().StringVarP(&parentDir, "dir", "", "", "parent directory for downloading manga")
-    initDirCmd.Flags().StringVarP(&mangaName, "name", "", "", "manga Name")
+    initDirCmd.Flags().StringVarP(&mangaDir, "dir", "", "", "manga directory for downloading manga")
 
     initDirCmd.MarkFlagRequired("id")
     initDirCmd.MarkFlagRequired("dir")
-    initDirCmd.MarkFlagRequired("name")
 
     return initDirCmd
 }
 
 func downloadMangaCmd() *cobra.Command {
     var limit int
-    var parentDir string
-    var mangaName string
+    var mangaDir string
 
-    fmt.Println(parentDir);
+    fmt.Println(mangaDir);
 
     downloadMangaCmd := &cobra.Command{
         Use:   "downloadmanga",
         Short: "Download manga with given id and to a directory",
         Run: func(cmd *cobra.Command, args []string) {
-            cacheFile := path.Join(parentDir, mangaName, CacheFilename)
+            cacheFile := path.Join(mangaDir, CacheFilename)
             if !fileExists(cacheFile) {
                 panic("cache file does not exist")
             }
@@ -124,12 +114,13 @@ func downloadMangaCmd() *cobra.Command {
             if err := yaml.Unmarshal(data, &mangaCache); err != nil {
                 panic(err)
             }
-            if !isDirectory(path.Join(mangaCache.MangaDir, TmpDir)) {
-                panic("tmp dir does not exist")
+            tmpDir := path.Join(mangaDir, TmpDir)
+            if !isDirectory(tmpDir) {
+		panic(fmt.Sprintf("tmp dir does not exist: %s", tmpDir))
             }
 
             log.Default().Println("Starting to download manga")
-            downloadManga(&mangaCache, limit)
+            downloadManga(&mangaCache, limit, mangaDir)
 
             file, err := os.OpenFile(cacheFile, os.O_WRONLY|os.O_CREATE, 0644)
             if err != nil {
@@ -139,11 +130,9 @@ func downloadMangaCmd() *cobra.Command {
         },
     }
     downloadMangaCmd.Flags().IntVarP(&limit, "limit", "", 50, "Describes the number of chapters to fetch in a batch")
-    downloadMangaCmd.Flags().StringVarP(&parentDir, "dir", "", "", "parent directory for downloading manga")
-    downloadMangaCmd.Flags().StringVarP(&mangaName, "name", "", "", "manga Name")
+    downloadMangaCmd.Flags().StringVarP(&mangaDir, "dir", "", "", "manga directory for downloading manga")
 
     downloadMangaCmd.MarkFlagRequired("dir")
-    downloadMangaCmd.MarkFlagRequired("name")
 
     return downloadMangaCmd
 }

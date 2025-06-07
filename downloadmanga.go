@@ -9,7 +9,7 @@ import (
 	"strconv"
 )
 
-func downloadManga(mangaCache *MangaCache, limit int) {
+func downloadManga(mangaCache *MangaCache, limit int, mangaDir string) {
 	// We configure limit and offset.
 	// Create a chapterIds slice
 	var chapterIds []string
@@ -32,18 +32,18 @@ func downloadManga(mangaCache *MangaCache, limit int) {
 
 	chapterUrls := createChapterUrlsFromChapterIds(chapterIds)
 
-	TmpDir := path.Join(mangaCache.MangaDir, TmpDir)
+	tmpDir := path.Join(mangaDir, TmpDir)
 	for _, chapterUrl := range chapterUrls {
 		// Remove .tmp/*
-		deleteFilesInDir(TmpDir)
-		pdfFilePath := path.Join(mangaCache.MangaDir, fmt.Sprintf("%05d.pdf", mangaCache.NextIdToCreatePDF))
+		deleteFilesInDir(tmpDir)
+		pdfFilePath := path.Join(mangaDir, fmt.Sprintf("%05d.pdf", mangaCache.NextIdToCreatePDF))
 
 		log.Default().Printf("Downloading chapter: %s\n", pdfFilePath)
 
-		downloadChapter(chapterUrl, TmpDir)
+		downloadChapter(chapterUrl, tmpDir)
 
 		// Add cmd to convert to pdf
-		cmd := exec.Command("magick", "convert", fmt.Sprintf("%s/*", TmpDir), pdfFilePath)
+		cmd := exec.Command("magick", "convert", fmt.Sprintf("%s/*", tmpDir), pdfFilePath)
 
 		if err := cmd.Run(); err != nil {
 			panic(err)
