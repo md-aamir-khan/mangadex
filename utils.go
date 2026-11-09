@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"time"
 
@@ -96,4 +97,8 @@ func isDirectory(path string) bool {
 		return false // Path does not exist or error occurred
 	}
 	return info.IsDir()
+}
+
+func getCacheFileLoc(mangaDir string) string {
+	return path.Join(mangaDir, CacheFilename)
 }
